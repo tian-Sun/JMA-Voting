@@ -53,7 +53,9 @@ function ensureDataDir() {
 async function fetchSingleListData(listConfig, stage) {
   console.log(`正在获取榜单: ${listConfig.name} (${listConfig.code})`)
   
-  const apiUrl = `https://lite-be.ivideocloud.cn/api/v1/fanfever/voteResult/${listConfig.id}?type=${stage}`
+  // 支持环境变量配置API地址，默认使用正式接口
+  const API_BASE_URL = process.env.API_BASE_URL || 'https://lite-be.ivideocloud.cn/api/v1/fanfever'
+  const apiUrl = `${API_BASE_URL}/voteResult/${listConfig.id}?type=${stage}`
   
   try {
     const fetch = (await import('node-fetch')).default

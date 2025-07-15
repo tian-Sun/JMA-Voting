@@ -62,6 +62,8 @@ jobs:
     
     - name: Collect voting data (First stage)
       if: steps.check-time.outputs.should_collect == 'true' && (github.event.inputs.stage == 'first' || github.event.inputs.stage == 'both' || github.event.inputs.stage == '')
+      env:
+        API_BASE_URL: ${{ secrets.FANFEVER_API_URL }}
       run: |
         VOTING_STAGE=first node scripts/fetchVotes.js
         echo "First stage data collection completed"
@@ -72,6 +74,8 @@ jobs:
     
     - name: Collect voting data (Second stage)
       if: steps.check-time.outputs.should_collect == 'true' && (github.event.inputs.stage == 'second' || github.event.inputs.stage == 'both')
+      env:
+        API_BASE_URL: ${{ secrets.FANFEVER_API_URL }}
       run: |
         VOTING_STAGE=second node scripts/fetchVotes.js
         echo "Second stage data collection completed"
