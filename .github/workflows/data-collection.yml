@@ -1,0 +1,188 @@
+name: FanFever Data Collection
+
+on:
+  schedule:
+    # 每天中午12:05 (UTC+8 = UTC+8, 所以是 04:05 UTC)
+    - cron: '5 4 * * *'
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: 'Voting stage to collect'
+        required: true
+        default: 'first'
+        type: choice
+        options:
+        - first
+        - second
+        - both
+      force_collection:
+        description: 'Force collection regardless of time'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  collect-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Create data directories
+      run: |
+        mkdir -p public/data
+        mkdir -p public/data/history
+    
+    - name: Check current time (Asia/Shanghai)
+      id: check-time
+      run: |
+        current_hour=$(TZ=Asia/Shanghai date +%H)
+        echo "current_hour=$current_hour" >> $GITHUB_OUTPUT
+        echo "Current hour in Shanghai: $current_hour"
+        
+        if [ "$current_hour" -ge 12 ] || [ "${{ inputs.force_collection }}" = "true" ]; then
+          echo "should_collect=true" >> $GITHUB_OUTPUT
+          echo "Time check passed or force collection enabled"
+        else
+          echo "should_collect=false" >> $GITHUB_OUTPUT
+          echo "Time check failed and force collection disabled"
+        fi
+    
+    - name: Collect voting data (First stage)
+      if: steps.check-time.outputs.should_collect == 'true' && (github.event.inputs.stage == 'first' || github.event.inputs.stage == 'both' || github.event.inputs.stage == '')
+      run: |
+        VOTING_STAGE=first node scripts/fetchVotes.js
+        echo "First stage data collection completed"
+    
+    - name: Wait between stages
+      if: steps.check-time.outputs.should_collect == 'true' && github.event.inputs.stage == 'both'
+      run: sleep 5
+    
+    - name: Collect voting data (Second stage)
+      if: steps.check-time.outputs.should_collect == 'true' && (github.event.inputs.stage == 'second' || github.event.inputs.stage == 'both')
+      run: |
+        VOTING_STAGE=second node scripts/fetchVotes.js
+        echo "Second stage data collection completed"
+    
+    - name: Build Next.js application
+      if: steps.check-time.outputs.should_collect == 'true'
+      run: |
+        npm run build
+        npm run export
+    
+    - name: Deploy to GitHub Pages
+      if: steps.check-time.outputs.should_collect == 'true'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./out
+        force_orphan: true
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: 'Auto-update FanFever voting data'
+    
+    - name: Create data summary
+      if: steps.check-time.outputs.should_collect == 'true'
+      run: |
+        echo "## Data Collection Summary" > data_summary.md
+        echo "- Collection time: $(TZ=Asia/Shanghai date)" >> data_summary.md
+        echo "- Stage: ${{ github.event.inputs.stage || 'first' }}" >> data_summary.md
+        
+        if [ -f public/data/manifest.json ]; then
+          echo "- Available data files:" >> data_summary.md
+          cat public/data/manifest.json | jq -r 'to_entries[] | "  - \(.key): \(.value | length) snapshots"' >> data_summary.md
+        fi
+        
+        if [ -d public/data/history ]; then
+          history_count=$(ls -1 public/data/history/*.gz 2>/dev/null | wc -l)
+          echo "- Historical data files: $history_count" >> data_summary.md
+        fi
+        
+        heat_count=$(ls -1 public/data/heat_*.gz 2>/dev/null | wc -l)
+        echo "- Heat analysis files: $heat_count" >> data_summary.md
+        
+        echo "- Data collection status: SUCCESS" >> data_summary.md
+        cat data_summary.md
+    
+    - name: Skip collection (time constraint)
+      if: steps.check-time.outputs.should_collect == 'false'
+      run: |
+        echo "Data collection skipped - current time is before 12:00 PM Shanghai time"
+        echo "Current hour: ${{ steps.check-time.outputs.current_hour }}"
+        echo "Use manual trigger with force_collection=true to override time constraint"
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 1 * * 0'  # 只在每周日清理时运行
+    needs: collect-data
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Clean up old data
+      run: |
+        node -e "
+        const fs = require('fs');
+        const path = require('path');
+        const dataDir = './public/data';
+        const historyDir = path.join(dataDir, 'history');
+        
+        // 清理30天前的文件
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - 30);
+        
+        let cleanedCount = 0;
+        
+        if (fs.existsSync(historyDir)) {
+          const files = fs.readdirSync(historyDir);
+          files.forEach(file => {
+            const filePath = path.join(historyDir, file);
+            const stats = fs.statSync(filePath);
+            
+            if (stats.mtime < cutoffDate) {
+              fs.unlinkSync(filePath);
+              console.log('删除过期文件:', file);
+              cleanedCount++;
+            }
+          });
+        }
+        
+        console.log('清理完成，删除文件数:', cleanedCount);
+        "
+    
+    - name: Commit cleaned data
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        if [ -n "$(git status --porcelain)" ]; then
+          git add .
+          git commit -m "Weekly data cleanup - removed files older than 30 days"
+          git push
+        else
+          echo "No files to clean up"
+        fi 

@@ -1,0 +1,52 @@
+{
+  "name": "fanfever-voting-dashboard",
+  "version": "1.0.0",
+  "description": "FanFever投票数据看板 - 支持榜单概览、趋势分析和榜单热度",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next export",
+    "lint": "next lint",
+    "deploy": "npm run build && npm run export && npx gh-pages -d out",
+    "fetch-data": "node scripts/fetchVotes.js",
+    "fetch-data:first": "VOTING_STAGE=first node scripts/fetchVotes.js",
+    "fetch-data:second": "VOTING_STAGE=second node scripts/fetchVotes.js",
+    "scheduler": "node scripts/scheduler.js",
+    "scheduler:start": "pm2 start scripts/scheduler.js --name fanfever-scheduler",
+    "scheduler:stop": "pm2 stop fanfever-scheduler",
+    "scheduler:restart": "pm2 restart fanfever-scheduler",
+    "scheduler:logs": "pm2 logs fanfever-scheduler"
+  },
+  "dependencies": {
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "echarts": "^5.4.3",
+    "echarts-for-react": "^3.0.2",
+    "lucide-react": "^0.292.0",
+    "next": "^14.0.0",
+    "node-cron": "^4.2.1",
+    "node-fetch": "^3.3.2",
+    "pako": "^2.1.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "swr": "^2.2.4",
+    "tailwind-merge": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pako": "^2.0.3",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "autoprefixer": "^10.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "gh-pages": "^6.0.0",
+    "postcss": "^8.0.0",
+    "tailwindcss": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
