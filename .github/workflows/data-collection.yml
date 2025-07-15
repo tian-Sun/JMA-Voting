@@ -84,8 +84,8 @@ jobs:
       if: steps.check-time.outputs.should_collect == 'true'
       run: |
         npm run build
-        # 使用 Next.js 的静态导出功能
-        npx next export --outdir out
+        # Next.js 已配置为自动导出到 out 目录
+        echo "Build completed, static files are in out/ directory"
     
     - name: Deploy to GitHub Pages
       if: steps.check-time.outputs.should_collect == 'true'

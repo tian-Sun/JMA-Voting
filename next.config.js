@@ -9,9 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  experimental: {
-    appDir: true
-  }
+  // appDir 在 Next.js 13+ 中默认启用，无需显式配置
 }
 
 module.exports = nextConfig 
