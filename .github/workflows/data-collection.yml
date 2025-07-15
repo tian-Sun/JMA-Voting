@@ -84,7 +84,8 @@ jobs:
       if: steps.check-time.outputs.should_collect == 'true'
       run: |
         npm run build
-        npm run export
+        # 使用 Next.js 的静态导出功能
+        npx next export --outdir out
     
     - name: Deploy to GitHub Pages
       if: steps.check-time.outputs.should_collect == 'true'
