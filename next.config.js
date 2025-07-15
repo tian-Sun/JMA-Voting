@@ -5,7 +5,7 @@ const nextConfig = {
   skipTrailingSlashRedirect: true,
   distDir: 'out',
   assetPrefix: process.env.NODE_ENV === 'production' ? '/JMA-Voting' : '',
-  basePath: process.env.NODE_ENV === 'production' ? '/JMA-Voting' : '',
+  // 移除 basePath 配置，避免路由问题
   images: {
     unoptimized: true
   },
