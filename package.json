@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "deploy": "npm run build && npx gh-pages -d out",
+    "deploy:manual": "node scripts/manual-deploy.js",
     "test-build": "node scripts/test-build.js",
     "fetch-data": "node scripts/fetchVotes.js",
     "fetch-data:first": "VOTING_STAGE=first node scripts/fetchVotes.js",

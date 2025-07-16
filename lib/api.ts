@@ -1,7 +1,7 @@
 import { DailySnapshot, VotingStage, HeatAnalysisHistory } from '@/types'
 
 // 支持环境变量配置API地址，默认使用正式接口
-const API_BASE_URL = process.env.API_BASE_URL || 'https://lite-be.ivideocloud.cn/api/v1/fanfever'
+const API_BASE_URL = process.env.API_BASE_URL || 'http://cfance.api.test/api/v1/fanfever'
 
 // 榜单配置
 const VOTING_LISTS = [
