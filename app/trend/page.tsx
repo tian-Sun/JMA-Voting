@@ -12,6 +12,9 @@ import dynamic from 'next/dynamic'
 // 动态导入 ECharts 组件
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
+// 确保页面可以静态生成
+export const dynamicParams = false
+
 export default function TrendPage() {
   const [loading, setLoading] = useState(true)
   const [stage, setStage] = useState<VotingStage>('first')

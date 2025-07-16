@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+
+// 确保页面可以静态生成
+export const dynamicParams = false
 import { Search, Filter, Download, RefreshCw } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingCard, LoadingTable } from '@/components/ui/loading'
