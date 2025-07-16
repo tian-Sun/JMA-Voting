@@ -86,8 +86,35 @@ jobs:
       if: steps.check-time.outputs.should_collect == 'true'
       run: |
         npm run build
-        # Next.js 已配置为自动导出到 out 目录
         echo "Build completed, static files are in out/ directory"
+        
+        # 验证关键文件是否存在
+        echo "Checking build output..."
+        ls -la out/
+        
+        if [ -f "out/dashboard/index.html" ]; then
+          echo "✅ Dashboard page exists"
+        else
+          echo "❌ Dashboard page missing"
+        fi
+        
+        if [ -f "out/trend/index.html" ]; then
+          echo "✅ Trend page exists"
+        else
+          echo "❌ Trend page missing"
+        fi
+        
+        if [ -f "out/heat/index.html" ]; then
+          echo "✅ Heat page exists"
+        else
+          echo "❌ Heat page missing"
+        fi
+        
+        if [ -f "out/404.html" ]; then
+          echo "✅ 404.html exists for client-side routing"
+        else
+          echo "❌ 404.html missing"
+        fi
     
     - name: Deploy to GitHub Pages
       if: steps.check-time.outputs.should_collect == 'true'
