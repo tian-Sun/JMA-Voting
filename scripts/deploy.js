@@ -5,7 +5,7 @@ const path = require('path')
 // 配置
 const config = {
   dataDir: path.join(__dirname, '../public/data'),
-  buildDir: path.join(__dirname, '../out'),
+  buildDir: path.join(__dirname, '../docs'),
 }
 
 // 检查是否有数据文件
@@ -59,7 +59,7 @@ function deployToGitHubPages() {
     }
     
     // 使用gh-pages包部署
-    execSync('npx gh-pages -d out', { stdio: 'inherit' })
+    execSync('npx gh-pages -d docs', { stdio: 'inherit' })
     console.log('✅ 部署完成')
     
   } catch (error) {
