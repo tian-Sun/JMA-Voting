@@ -8,7 +8,7 @@ const cache = new Map<string, DailySnapshot>()
 const BASE_PATH = process.env.NODE_ENV === 'production' ? '/JMA-Voting' : ''
 
 // API基础地址
-const API_BASE_URL = 'http://cfance.api.test/api/v1/fanfever'
+const API_BASE_URL = 'https://lite-be.cfanfever.com/api/v1/fanfever'
 
 // 加载并解压缩单日数据
 export async function loadDailyData(date: string, stage: VotingStage): Promise<DailySnapshot | null> {
