@@ -9,10 +9,14 @@
     "lint": "next lint",
     "deploy": "npm run build && npx gh-pages -d out",
     "deploy:manual": "node scripts/manual-deploy.js",
+    "deploy:data": "node scripts/deploy.js",
     "test-build": "node scripts/test-build.js",
     "fetch-data": "node scripts/fetchVotes.js",
     "fetch-data:first": "VOTING_STAGE=first node scripts/fetchVotes.js",
     "fetch-data:second": "VOTING_STAGE=second node scripts/fetchVotes.js",
+    "fetch:manual": "node scripts/manual-fetch.js",
+    "fetch:manual:first": "VOTING_STAGE=first node scripts/manual-fetch.js",
+    "fetch:manual:second": "VOTING_STAGE=second node scripts/manual-fetch.js",
     "scheduler": "node scripts/scheduler.js",
     "scheduler:start": "pm2 start scripts/scheduler.js --name fanfever-scheduler",
     "scheduler:stop": "pm2 stop fanfever-scheduler",
@@ -20,6 +24,7 @@
     "scheduler:logs": "pm2 logs fanfever-scheduler"
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
     "echarts": "^5.4.3",

@@ -73,7 +73,6 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -91,7 +90,9 @@ logs
 yarn.lock
 pnpm-lock.yaml
 
-# Keep data files for the project
-!data/
-!data/*.json.gz
-!data/manifest.json 
+# Keep public data files for the project
+!public/data/
+!public/data/*.json.gz
+!public/data/manifest.json
+!public/data/history/
+!public/data/history/*.json.gz 
