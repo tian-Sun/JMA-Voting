@@ -6,8 +6,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingCard } from '@/components/ui/loading'
 import { VotingStage, Artist } from '@/types'
 import { formatDate, formatNumber, cn } from '@/lib/utils'
-import { fetchMultiStageData } from '@/lib/api'
+import { fetchMultiStageData, fetchArtistTrendData } from '@/lib/api'
 import { PlatformVotesSummary } from '@/components/platform-votes'
+import { MiniTrendChart } from '@/components/ui/trend-chart'
 
 // 确保页面可以静态生成
 export const dynamicParams = false
@@ -19,6 +20,8 @@ export default function TrendPage() {
   const [artists, setArtists] = useState<Artist[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [availableCategories, setAvailableCategories] = useState<string[]>([])
+  const [artistTrends, setArtistTrends] = useState<{ [artistId: string]: { date: string; rank: number; votes: number }[] }>({})
+  const [loadingTrends, setLoadingTrends] = useState<{ [artistId: string]: boolean }>({})
 
   // 趋势数据将从真实API获取，不使用模拟数据
 
@@ -76,6 +79,35 @@ export default function TrendPage() {
     // 按分类筛选，显示该分类下的所有艺人
     return artists.filter(artist => artist.category === selectedCategory)
   }, [artists, selectedCategory])
+
+  // 当筛选后的艺人数据变化时，自动加载趋势数据
+  useEffect(() => {
+    if (filteredArtists.length > 0) {
+      loadAllArtistTrends(filteredArtists)
+    }
+  }, [filteredArtists, stage, dateRange])
+
+  // 加载艺人趋势数据
+  const loadArtistTrend = async (artistId: string) => {
+    if (artistTrends[artistId] || loadingTrends[artistId]) return
+    
+    setLoadingTrends(prev => ({ ...prev, [artistId]: true }))
+    
+    try {
+      const trendData = await fetchArtistTrendData(stage, artistId, parseInt(dateRange))
+      setArtistTrends(prev => ({ ...prev, [artistId]: trendData }))
+    } catch (error) {
+      console.error(`加载 ${artistId} 趋势数据失败:`, error)
+    } finally {
+      setLoadingTrends(prev => ({ ...prev, [artistId]: false }))
+    }
+  }
+
+  // 批量加载所有艺人的趋势数据
+  const loadAllArtistTrends = async (artists: Artist[]) => {
+    const promises = artists.map(artist => loadArtistTrend(artist.id))
+    await Promise.allSettled(promises)
+  }
 
 
 
@@ -165,9 +197,12 @@ export default function TrendPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 页面头部 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">趋势分析</h1>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <TrendingUp className="w-8 h-8 text-blue-500" />
+            艺人趋势分析
+          </h1>
           <p className="mt-2 text-gray-600">
-            分析艺人投票趋势和排名变化 | 阶段: {stage === 'first' ? '第一阶段' : '第二阶段'}
+            可视化艺人排名和票数变化趋势 | 阶段: {stage === 'first' ? '第一阶段' : '第二阶段'} | 时间范围: 近{dateRange}天
           </p>
         </div>
 
@@ -264,7 +299,8 @@ export default function TrendPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              排名趋势表格
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+              艺人趋势分析
               {selectedCategory && (
                 <span className="text-sm font-normal text-gray-500">
                   - {(() => {
@@ -280,7 +316,7 @@ export default function TrendPage() {
               )}
             </CardTitle>
             <p className="text-sm text-gray-500">
-              注：当前显示的是最新数据快照，历史趋势功能需要积累多日数据后开放
+              趋势图自动加载显示历史排名变化。当前只有单日数据，明天开始将显示趋势线。点击趋势图可查看详细的历史排名和票数变化。绿色箭头表示排名上升，红色箭头表示排名下降。
             </p>
           </CardHeader>
           <CardContent>
@@ -302,7 +338,7 @@ export default function TrendPage() {
                         票数来源
                       </th>
                       <th className="border border-gray-200 px-4 py-2 text-center font-medium text-gray-700">
-                        排名变化
+                        趋势图
                       </th>
                     </tr>
                   </thead>
@@ -356,13 +392,19 @@ export default function TrendPage() {
                           )}
                         </td>
                         <td className="border border-gray-200 px-4 py-3 text-center">
-                          {artist.rankDelta > 0 ? (
-                            <span className="text-green-600">↑ +{artist.rankDelta}</span>
-                          ) : artist.rankDelta < 0 ? (
-                            <span className="text-red-600">↓ {artist.rankDelta}</span>
-                          ) : (
-                            <span className="text-gray-500">-</span>
-                          )}
+                          <div className="flex justify-center">
+                            {loadingTrends[artist.id] ? (
+                              <div className="flex items-center justify-center w-16 h-8 bg-gray-100 rounded">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                              </div>
+                            ) : (
+                              <MiniTrendChart
+                                data={artistTrends[artist.id] || []}
+                                artistName={artist.name}
+                                className="w-16 h-8"
+                              />
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

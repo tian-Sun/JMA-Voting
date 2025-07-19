@@ -1,4 +1,5 @@
 import { DailySnapshot, VotingStage, HeatAnalysisHistory } from '@/types'
+import pako from 'pako'
 
 // 支持环境变量配置API地址，默认使用正式接口
 const API_BASE_URL = process.env.API_BASE_URL || 'https://lite-be.cfanfever.com/api/v1/fanfever'
@@ -94,8 +95,7 @@ export async function fetchHeatAnalysisData(stage: VotingStage): Promise<HeatAna
     const arrayBuffer = await response.arrayBuffer()
     const compressed = new Uint8Array(arrayBuffer)
     
-    // 动态导入pako用于解压
-    const pako = await import('pako')
+    // 使用静态导入的pako
     const decompressed = pako.inflate(compressed, { to: 'string' })
     const data = JSON.parse(decompressed)
     
@@ -207,7 +207,6 @@ export async function fetchMultiDayHeatAnalysis(stage: VotingStage, days: number
       if (response.ok) {
         const arrayBuffer = await response.arrayBuffer()
         const compressed = new Uint8Array(arrayBuffer)
-        const pako = await import('pako')
         const decompressed = pako.inflate(compressed, { to: 'string' })
         const data = JSON.parse(decompressed)
         results.push(data)
@@ -218,6 +217,56 @@ export async function fetchMultiDayHeatAnalysis(stage: VotingStage, days: number
   }
   
   return results.sort((a, b) => a.date.localeCompare(b.date))
+}
+
+// 获取艺人历史趋势数据
+export async function fetchArtistTrendData(
+  stage: VotingStage, 
+  artistId: string, 
+  days: number = 7
+): Promise<{ date: string; rank: number; votes: number }[]> {
+  const trendData: { date: string; rank: number; votes: number }[] = []
+  
+  for (let i = 0; i < days; i++) {
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    const dateString = date.toISOString().split('T')[0]
+    
+    try {
+      const filename = `${dateString}_${stage}.json.gz`
+      const response = await fetch(`/data/${filename}`)
+      
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer()
+        const compressed = new Uint8Array(arrayBuffer)
+        const decompressed = pako.inflate(compressed, { to: 'string' })
+        const data = JSON.parse(decompressed)
+        
+        // 在所有分类中查找该艺人
+        let foundArtist: any = null
+        Object.values(data.categories).forEach((categoryArtists: any) => {
+          if (Array.isArray(categoryArtists)) {
+            const artist = categoryArtists.find((a: any) => a.id === artistId)
+            if (artist) {
+              foundArtist = artist
+            }
+          }
+        })
+        
+        if (foundArtist) {
+          trendData.push({
+            date: dateString,
+            rank: foundArtist.rankToday,
+            votes: foundArtist.currentVotes
+          })
+        }
+      }
+    } catch (error) {
+      console.warn(`加载 ${dateString} 数据失败:`, error)
+    }
+  }
+  
+  return trendData.sort((a, b) => a.date.localeCompare(b.date))
 }
 
 // 获取榜单趋势数据
@@ -330,8 +379,7 @@ async function fetchLocalData(stage: VotingStage): Promise<DailySnapshot | null>
     
     console.log(`📦 压缩数据大小: ${compressed.length} bytes`)
     
-    // 动态导入pako用于解压
-    const pako = await import('pako')
+    // 使用静态导入的pako
     const decompressed = pako.inflate(compressed, { to: 'string' })
     
     console.log(`📄 解压后数据大小: ${decompressed.length} characters`)
