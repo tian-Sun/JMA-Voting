@@ -224,7 +224,7 @@ export default function HeatPage() {
         type: 'value',
         name: '票数',
         axisLabel: {
-          formatter: (value: number) => (value / 1000).toFixed(0) + 'K'
+          formatter: (value: number) => ((value || 0) / 1000).toFixed(0) + 'K'
         }
       },
       series: [
@@ -295,13 +295,13 @@ export default function HeatPage() {
           return {
             title: `${prefix}日增长率${suffix}`,
             yAxisName: '增长率(%)',
-            formatter: (value: number) => value.toFixed(1) + '%'
+            formatter: (value: number) => (value || 0).toFixed(1) + '%'
           }
         case 'competitionIntensity':
           return {
             title: `${prefix}竞争激烈度${suffix}`,
             yAxisName: '激烈度',
-            formatter: (value: number) => value.toFixed(1)
+            formatter: (value: number) => (value || 0).toFixed(1)
           }
         case 'averageVotes':
           return {
@@ -313,7 +313,7 @@ export default function HeatPage() {
           return {
             title: `${prefix}Top10票数占比${suffix}`,
             yAxisName: '占比(%)',
-            formatter: (value: number) => value.toFixed(1) + '%'
+            formatter: (value: number) => (value || 0).toFixed(1) + '%'
           }
         default:
           return {
@@ -391,7 +391,7 @@ export default function HeatPage() {
           name: metricConfig.yAxisName,
           axisLabel: {
             formatter: selectedMetric === 'totalVotes' || selectedMetric === 'averageVotes' 
-              ? (value: number) => (value / 1000).toFixed(0) + 'K'
+              ? (value: number) => ((value || 0) / 1000).toFixed(0) + 'K'
               : undefined
           }
         },
