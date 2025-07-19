@@ -30,51 +30,7 @@ export default function TrendPage() {
     setSelectedArtists([])
   }, [selectedCategory])
 
-  // 模拟数据 - 实际应用中从API获取
-  const mockTrendData: ArtistTrend[] = [
-    {
-      artistId: '1',
-      artistName: '艺人A',
-      category: '男团',
-      data: [
-        { date: '2025-07-18', votes: 1000, rank: 5 },
-        { date: '2025-07-19', votes: 1200, rank: 4 },
-        { date: '2025-07-20', votes: 1500, rank: 3 },
-        { date: '2025-07-21', votes: 1800, rank: 2 },
-        { date: '2025-07-22', votes: 2100, rank: 1 },
-        { date: '2025-07-23', votes: 2400, rank: 1 },
-        { date: '2025-07-24', votes: 2700, rank: 1 },
-      ]
-    },
-    {
-      artistId: '2',
-      artistName: '艺人B',
-      category: '女团',
-      data: [
-        { date: '2025-07-18', votes: 800, rank: 8 },
-        { date: '2025-07-19', votes: 950, rank: 7 },
-        { date: '2025-07-20', votes: 1100, rank: 6 },
-        { date: '2025-07-21', votes: 1300, rank: 5 },
-        { date: '2025-07-22', votes: 1600, rank: 4 },
-        { date: '2025-07-23', votes: 1900, rank: 3 },
-        { date: '2025-07-24', votes: 2200, rank: 2 },
-      ]
-    },
-    {
-      artistId: '3',
-      artistName: '艺人C',
-      category: '独唱',
-      data: [
-        { date: '2025-07-18', votes: 1200, rank: 3 },
-        { date: '2025-07-19', votes: 1150, rank: 5 },
-        { date: '2025-07-20', votes: 1300, rank: 4 },
-        { date: '2025-07-21', votes: 1250, rank: 6 },
-        { date: '2025-07-22', votes: 1400, rank: 5 },
-        { date: '2025-07-23', votes: 1550, rank: 4 },
-        { date: '2025-07-24', votes: 1700, rank: 3 },
-      ]
-    }
-  ]
+  // 趋势数据将从真实API获取，不使用模拟数据
 
   useEffect(() => {
     async function fetchData() {
@@ -111,6 +67,11 @@ export default function TrendPage() {
           
           // 默认选择前5名
           setSelectedArtists(allArtists.slice(0, 5).map(artist => artist.id))
+        } else {
+          // 没有数据时的处理
+          setAvailableCategories([])
+          setArtists([])
+          setSelectedArtists([])
         }
       } catch (error) {
         console.error('获取趋势数据失败:', error)
@@ -249,25 +210,20 @@ export default function TrendPage() {
 
   // 导出数据
   const handleExport = () => {
-    const filteredData = mockTrendData.filter(artist => 
-      selectedArtists.includes(artist.artistId)
-    )
-    
-    if (!filteredData.length) return
+    if (!filteredArtists.length) return
 
-    const headers = ['日期', ...filteredData.map(artist => artist.artistName)]
+    const headers = ['艺人名称', '分类', '当前票数', '当前排名']
     const rows: string[][] = []
     
-    const dates = filteredData[0].data.map(d => d.date)
-    dates.forEach(date => {
-      const row = [date]
-      filteredData.forEach(artist => {
-        const dataPoint = artist.data.find(d => d.date === date)
-        row.push(chartType === 'votes' 
-          ? dataPoint?.votes.toString() || '0'
-          : dataPoint?.rank?.toString() || '0'
-        )
-      })
+    filteredArtists.forEach(artist => {
+      const row = [
+        artist.nameOfWork && ['PR70', 'PR71', 'PR72', 'PR73'].includes(artist.category) 
+          ? `${artist.name} (${artist.nameOfWork})` 
+          : artist.name,
+        artist.category,
+        artist.currentVotes?.toString() || '0',
+        artist.rankToday?.toString() || '0'
+      ]
       rows.push(row)
     })
 
@@ -276,7 +232,7 @@ export default function TrendPage() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `趋势数据_${formatDate(new Date())}.csv`)
+    link.setAttribute('download', `趋势数据_${stage === 'first' ? '第一阶段' : '第二阶段'}_${formatDate(new Date())}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -291,6 +247,46 @@ export default function TrendPage() {
           <div className="mt-8">
             <LoadingChart />
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 无数据状态
+  if (!artists.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* 页面头部 */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">趋势分析</h1>
+            <p className="mt-2 text-gray-600">
+              分析艺人投票趋势和排名变化 | 阶段: {stage === 'first' ? '第一阶段' : '第二阶段'}
+            </p>
+          </div>
+
+          {/* 无数据提示 */}
+          <Card className="mb-6">
+            <CardContent className="py-12 text-center">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">暂无数据</h3>
+              <p className="text-gray-600 mb-6">
+                {stage === 'first' ? '第一阶段' : '第二阶段'} 暂无投票数据，请先收集数据
+              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">
+                  请运行以下命令收集最新数据：
+                </p>
+                <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm">
+                  npm run collect:{stage}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )

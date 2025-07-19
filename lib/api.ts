@@ -162,12 +162,12 @@ function generateHeatAnalysisFromSnapshot(snapshot: DailySnapshot, stage: Voting
          category,
          categoryName: listConfig?.name || category,
          currentRank,
-         previousRank: currentRank + Math.floor(Math.random() * 10) + 5, // 模拟之前排名
-         rankChange: Math.floor(Math.random() * 10) + 5, // 模拟排名提升
+         previousRank: currentRank, // 暂时使用当前排名，后续可通过历史数据计算
+         rankChange: 0, // 暂时设为0，后续可通过历史数据计算
          currentVotes,
-         previousVotes: Math.floor((currentVotes || 0) * (0.6 + Math.random() * 0.3)), // 模拟之前票数
-         voteGrowth: 50 + Math.random() * 100, // 50-150%增长
-         voteGrowthAbsolute: Math.floor((currentVotes || 0) * 0.4),
+         previousVotes: currentVotes || 0, // 暂时使用当前票数，后续可通过历史数据计算
+         voteGrowth: 0, // 暂时设为0，后续可通过历史数据计算
+         voteGrowthAbsolute: 0, // 暂时设为0，后续可通过历史数据计算
          imageUrl: artist.imageUrl || '',
          talentNumber: artist.talentNumber || '',
          nameOfWork: artist.nameOfWork || null,
@@ -426,48 +426,15 @@ function mergeAllListsData(results: any[], stage: VotingStage): DailySnapshot {
   }
 }
 
-// 生成备用数据（如果所有方式都失败）
-function generateFallbackData(stage: VotingStage): DailySnapshot {
-  console.log('生成备用示例数据...')
-  const now = new Date().toISOString().split('T')[0]
-  const categories: { [category: string]: any[] } = {}
-  let totalVotes = 0
-
-  VOTING_LISTS.forEach(listConfig => {
-    const artists = []
-    const listSize = listConfig.code.startsWith('AM') ? 75 : 50 // 艺人榜单75个，作品榜单50个
-    
-    for (let i = 1; i <= listSize; i++) {
-      const votes = Math.floor(Math.random() * 100000) + 10000
-      totalVotes += votes
-      
-      artists.push({
-        id: `${listConfig.category}-${i}`,
-        name: `${listConfig.code} 候选人 ${i}`,
-        englishName: `${listConfig.code} Candidate ${i}`,
-        currentVotes: votes,
-        rankToday: i,
-        rankDelta: Math.floor(Math.random() * 11) - 5,
-        category: listConfig.category,
-        talentNumber: `${listConfig.code.slice(0,2)} ${i.toString().padStart(2, '0')}`,
-        imageUrl: `https://picsum.photos/200/200?random=${i + listConfig.id * 100}`,
-        nameOfWork: listConfig.code.startsWith('PR') ? `作品 ${i}` : null,
-      })
-    }
-    
-    categories[listConfig.category] = artists
-  })
-
-  return {
-    snapshot_date: now,
-    stage,
-    total_votes: totalVotes,
-    categories,
-  }
+// 不再生成假数据，返回null表示无数据
+function generateFallbackData(stage: VotingStage): DailySnapshot | null {
+  console.log(`❌ 没有可用的 ${stage} 阶段数据`)
+  console.log(`📝 请运行 npm run collect:${stage} 收集最新数据`)
+  return null
 }
 
 // 兼容的多阶段数据获取函数
-export async function fetchMultiStageData(): Promise<{ [stage: string]: DailySnapshot }> {
+export async function fetchMultiStageData(): Promise<{ [stage: string]: DailySnapshot | null }> {
   try {
     const firstStage = await fetchVotingDataFromApi('first')
     const secondStage = await fetchVotingDataFromApi('second')
