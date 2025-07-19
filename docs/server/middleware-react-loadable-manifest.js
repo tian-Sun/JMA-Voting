@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{\"app/heat/page.tsx -> echarts-for-react\":{\"id\":\"app/heat/page.tsx -> echarts-for-react\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_echarts-for-react_esm_index_js.js\"]},\"lib/api.ts -> pako\":{\"id\":\"lib/api.ts -> pako\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_pako_dist_pako_esm_mjs.js\"]}}"
+self.__REACT_LOADABLE_MANIFEST="{\"lib/api.ts -> pako\":{\"id\":\"lib/api.ts -> pako\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_pako_dist_pako_esm_mjs.js\"]}}"
