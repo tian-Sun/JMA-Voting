@@ -19,16 +19,10 @@ export default function TrendPage() {
   const [loading, setLoading] = useState(true)
   const [stage, setStage] = useState<VotingStage>('first')
   const [dateRange, setDateRange] = useState<'7' | '14' | '30'>('7')
-  const [selectedArtists, setSelectedArtists] = useState<string[]>([])
   const [chartType, setChartType] = useState<'votes' | 'rank'>('votes')
   const [artists, setArtists] = useState<Artist[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [availableCategories, setAvailableCategories] = useState<string[]>([])
-  
-  // 当用户切换分类时，重置已选艺人，避免跨分类选满 5 位导致无法勾选
-  useEffect(() => {
-    setSelectedArtists([])
-  }, [selectedCategory])
 
   // 趋势数据将从真实API获取，不使用模拟数据
 
@@ -64,14 +58,10 @@ export default function TrendPage() {
           })
           
           setArtists(allArtists) // 不限制数量，显示所有艺人
-          
-          // 默认选择前5名
-          setSelectedArtists(allArtists.slice(0, 5).map(artist => artist.id))
         } else {
           // 没有数据时的处理
           setAvailableCategories([])
           setArtists([])
-          setSelectedArtists([])
         }
       } catch (error) {
         console.error('获取趋势数据失败:', error)
@@ -83,20 +73,13 @@ export default function TrendPage() {
     fetchData()
   }, [stage, dateRange])
 
-  // 根据分类筛选艺人
+  // 根据分类筛选艺人 - 显示当前分类下的所有艺人
   const filteredArtists = useMemo(() => {
-    let result = artists
+    if (!selectedCategory) return []
     
-    // 按分类筛选
-    if (selectedCategory) {
-      result = result.filter(artist => artist.category === selectedCategory)
-    }
-    
-    // 按选中状态筛选
-    result = result.filter(artist => selectedArtists.includes(artist.id))
-    
-    return result
-  }, [artists, selectedCategory, selectedArtists])
+    // 按分类筛选，显示该分类下的所有艺人
+    return artists.filter(artist => artist.category === selectedCategory)
+  }, [artists, selectedCategory])
 
   // 生成图表配置
   const generateChartOption = () => {
@@ -398,26 +381,23 @@ export default function TrendPage() {
           </CardContent>
         </Card>
 
-        {/* 艺人选择 */}
+        {/* 艺人列表 */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              选择对比艺人 (最多5位)
+              {selectedCategory && (() => {
+                const categoryNames: { [key: string]: string } = {
+                  'AM50': '年度男艺人', 'AM51': '年度女艺人', 'AM52': '年度男团',
+                  'AM53': '年度女团', 'AM54': '最具人气新人-男', 'AM55': '最具人气新人-女',
+                  'PR70': '年度歌曲', 'PR71': '年度专辑', 'PR72': '年度合作',
+                  'PR73': '年度MV', 'PR74': 'JMA中国最具影响力华语流行男艺人'
+                }
+                return categoryNames[selectedCategory] || selectedCategory
+              })()}
               {selectedCategory && (
-                <span className="text-sm font-normal text-gray-500">
-                  - {(() => {
-                    const categoryNames: { [key: string]: string } = {
-                      'AM50': '年度男艺人', 'AM51': '年度女艺人', 'AM52': '年度男团',
-                      'AM53': '年度女团', 'AM54': '最具人气新人-男', 'AM55': '最具人气新人-女',
-                      'PR70': '年度歌曲', 'PR71': '年度专辑', 'PR72': '年度合作',
-                      'PR73': '年度MV', 'PR74': 'JMA中国最具影响力华语流行男艺人'
-                    }
-                    return categoryNames[selectedCategory] || selectedCategory
-                  })()}
-                  <span className="text-xs text-gray-400 ml-2">
-                    (共 {artists.filter(artist => artist.category === selectedCategory).length} 位艺人)
-                  </span>
+                <span className="text-xs text-gray-400 ml-2">
+                  (共 {artists.filter(artist => artist.category === selectedCategory).length} 位艺人)
                 </span>
               )}
             </CardTitle>
@@ -425,21 +405,7 @@ export default function TrendPage() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
               {artists.filter(artist => selectedCategory && artist.category === selectedCategory).map(artist => (
-                <label key={artist.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={selectedArtists.includes(artist.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        if (selectedArtists.length < 5) {
-                          setSelectedArtists([...selectedArtists, artist.id])
-                        }
-                      } else {
-                        setSelectedArtists(selectedArtists.filter(id => id !== artist.id))
-                      }
-                    }}
-                    className="h-4 w-4 text-primary-600 rounded flex-shrink-0"
-                  />
+                <div key={artist.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-2 flex-shrink-0">
                     {artist.imageUrl && (
                       <img 
@@ -478,7 +444,7 @@ export default function TrendPage() {
                       </div>
                     </div>
                   </div>
-                </label>
+                </div>
               ))}
             </div>
           </CardContent>
@@ -508,7 +474,7 @@ export default function TrendPage() {
             </p>
           </CardHeader>
           <CardContent>
-            {selectedArtists.length > 0 && filteredArtists.length > 0 ? (
+            {filteredArtists.length > 0 ? (
               <div className="chart-container">
                 <ReactECharts
                   option={generateChartOption()}
@@ -519,16 +485,15 @@ export default function TrendPage() {
               </div>
             ) : (
               <div className="py-12 text-center text-gray-500">
-                {selectedArtists.length === 0 ? '请选择要分析的艺人' : 
-                 selectedCategory ? `当前分类"${(() => {
-                   const categoryNames: { [key: string]: string } = {
-                     'AM50': '年度男艺人', 'AM51': '年度女艺人', 'AM52': '年度男团',
-                     'AM53': '年度女团', 'AM54': '最具人气新人-男', 'AM55': '最具人气新人-女',
-                     'PR70': '年度歌曲', 'PR71': '年度专辑', 'PR72': '年度合作',
-                     'PR73': '年度MV', 'PR74': 'JMA中国最具影响力华语流行男艺人'
-                   }
-                   return categoryNames[selectedCategory] || selectedCategory
-                 })()}"中没有选中的艺人` : '请选择要分析的艺人'}
+                {selectedCategory ? `当前分类"${(() => {
+                  const categoryNames: { [key: string]: string } = {
+                    'AM50': '年度男艺人', 'AM51': '年度女艺人', 'AM52': '年度男团',
+                    'AM53': '年度女团', 'AM54': '最具人气新人-男', 'AM55': '最具人气新人-女',
+                    'PR70': '年度歌曲', 'PR71': '年度专辑', 'PR72': '年度合作',
+                    'PR73': '年度MV', 'PR74': 'JMA中国最具影响力华语流行男艺人'
+                  }
+                  return categoryNames[selectedCategory] || selectedCategory
+                })()}"暂无数据` : '请选择要分析的分类'}
               </div>
             )}
           </CardContent>
