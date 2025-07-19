@@ -4,6 +4,12 @@ export type VotingStage = 'first' | 'second'
 // 投票分类类型
 export type VotingCategory = string
 
+// 平台票数数据
+export interface PlatformVotes {
+  platform: string
+  votes: number
+}
+
 // 艺人投票数据
 export interface Artist {
   id: string
@@ -18,6 +24,7 @@ export interface Artist {
   talentNumber?: string // 编号如 AM 50-01
   imageUrl?: string
   nameOfWork?: string | null
+  platformVotes?: PlatformVotes[] // 各平台票数分布
 }
 
 // 单日快照数据
@@ -84,6 +91,7 @@ export interface DarkHorse {
   imageUrl?: string
   talentNumber?: string
   nameOfWork?: string | null
+  platformVotes?: PlatformVotes[] // 各平台票数分布
 }
 
 // 热度分析历史数据

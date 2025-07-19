@@ -36,6 +36,10 @@ interface ApiArtist {
     name_of_work: string | null
     image_url: string
   }
+  data_source?: Array<{
+    platform: string
+    votes: number
+  }>
 }
 
 // 主要的API调用函数 - 优先使用本地数据，失败时使用备用数据
@@ -171,6 +175,7 @@ function generateHeatAnalysisFromSnapshot(snapshot: DailySnapshot, stage: Voting
          imageUrl: artist.imageUrl || '',
          talentNumber: artist.talentNumber || '',
          nameOfWork: artist.nameOfWork || null,
+         platformVotes: artist.platformVotes || [], // 添加平台票数信息
        })
      })
   })
@@ -413,6 +418,7 @@ function mergeAllListsData(results: any[], stage: VotingStage): DailySnapshot {
       talentNumber: apiArtist.talent_number,
       imageUrl: apiArtist.talent.image_url,
       nameOfWork: apiArtist.talent.name_of_work,
+      platformVotes: apiArtist.data_source || [], // 添加平台票数数据
     }))
 
     categories[listConfig.category] = artists

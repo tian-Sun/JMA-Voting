@@ -110,6 +110,7 @@ async function collectVotingData(stage = 'first') {
         talentNumber: apiArtist.talent_number,
         imageUrl: apiArtist.talent.image_url,
         nameOfWork: apiArtist.talent.name_of_work,
+        platformVotes: apiArtist.data_source || [], // 添加平台票数数据
       }))
       
       categories[listConfig.category] = artists

@@ -7,6 +7,7 @@ import { LoadingCard } from '@/components/ui/loading'
 import { VotingStage, Artist } from '@/types'
 import { formatDate, formatNumber, cn } from '@/lib/utils'
 import { fetchMultiStageData } from '@/lib/api'
+import { PlatformVotesSummary } from '@/components/platform-votes'
 
 // 确保页面可以静态生成
 export const dynamicParams = false
@@ -298,6 +299,9 @@ export default function TrendPage() {
                         当前票数
                       </th>
                       <th className="border border-gray-200 px-4 py-2 text-center font-medium text-gray-700">
+                        票数来源
+                      </th>
+                      <th className="border border-gray-200 px-4 py-2 text-center font-medium text-gray-700">
                         排名变化
                       </th>
                     </tr>
@@ -340,6 +344,16 @@ export default function TrendPage() {
                         </td>
                         <td className="border border-gray-200 px-4 py-3 text-center font-medium text-gray-900">
                           {formatNumber(artist.currentVotes)}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-center">
+                          {artist.platformVotes && artist.platformVotes.length > 0 ? (
+                            <PlatformVotesSummary 
+                              platformVotes={artist.platformVotes} 
+                              totalVotes={artist.currentVotes}
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
+                          )}
                         </td>
                         <td className="border border-gray-200 px-4 py-3 text-center">
                           {artist.rankDelta > 0 ? (

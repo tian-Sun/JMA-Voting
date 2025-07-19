@@ -10,6 +10,7 @@ import { LoadingCard, LoadingChart } from '@/components/ui/loading'
 import { VotingStage, HeatAnalysisHistory, CategoryHeat, DarkHorse } from '@/types'
 import { formatNumber, formatDate, cn } from '@/lib/utils'
 import { fetchHeatAnalysisData, fetchMultiDayHeatAnalysis, fetchCategoryTrendData } from '@/lib/api'
+import { PlatformVotesSummary } from '@/components/platform-votes'
 import dynamic from 'next/dynamic'
 
 // 动态导入 ECharts 组件
@@ -931,6 +932,17 @@ export default function HeatPage() {
                       <span className="ml-1 font-medium">{formatNumber(horse.currentVotes)}</span>
                     </div>
                   </div>
+                  
+                  {/* 平台票数显示 */}
+                  {horse.platformVotes && horse.platformVotes.length > 0 && (
+                    <div className="mt-2">
+                      <PlatformVotesSummary 
+                        platformVotes={horse.platformVotes} 
+                        totalVotes={horse.currentVotes}
+                        className="text-xs"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

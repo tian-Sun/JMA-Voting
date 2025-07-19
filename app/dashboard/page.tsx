@@ -10,6 +10,7 @@ import { LoadingCard, LoadingTable } from '@/components/ui/loading'
 import { Artist, VotingStage, DailySnapshot } from '@/types'
 import { fetchVotingDataFromApi } from '@/lib/api'
 import { formatNumber, getRankChangeInfo, formatDate, cn } from '@/lib/utils'
+import { PlatformVotesSummary } from '@/components/platform-votes'
 
 // 分类代码到友好名称的映射
 const CATEGORY_DISPLAY_NAMES: { [key: string]: string } = {
@@ -352,6 +353,7 @@ export default function DashboardPage() {
                     {isWorkList && <th className="table-head">作品名称</th>}
                     <th className="table-head">编号</th>
                     <th className="table-head">当前票数</th>
+                    <th className="table-head">票数来源</th>
                     <th className="table-head">昨日排名</th>
                     <th className="table-head">排名变化</th>
                   </tr>
@@ -413,6 +415,16 @@ export default function DashboardPage() {
                         </td>
                         <td className="table-cell">
                           <div className="font-medium text-lg">{formatNumber(artist.currentVotes)}</div>
+                        </td>
+                        <td className="table-cell">
+                          {artist.platformVotes && artist.platformVotes.length > 0 ? (
+                            <PlatformVotesSummary 
+                              platformVotes={artist.platformVotes} 
+                              totalVotes={artist.currentVotes}
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
+                          )}
                         </td>
                         <td className="table-cell">
                           {artist.rankYesterday ? `#${artist.rankYesterday}` : '-'}

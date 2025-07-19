@@ -12,6 +12,7 @@
     "collect:both": "npm run collect:first && npm run collect:second"
   },
   "dependencies": {
+    "@radix-ui/react-tooltip": "^1.2.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
