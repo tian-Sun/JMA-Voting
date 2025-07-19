@@ -2,8 +2,10 @@
 
 const fs = require('fs')
 const path = require('path')
-const fetch = require('node-fetch')
 const pako = require('pako')
+
+// 使用内置的fetch（Node.js 18+）
+const fetch = globalThis.fetch
 
 // 支持环境变量配置API地址
 const API_BASE_URL = process.env.FANFEVER_API_URL || 'https://lite-be.cfanfever.com/api/v1/fanfever'
