@@ -86,31 +86,31 @@ jobs:
       if: steps.check-time.outputs.should_collect == 'true'
       run: |
         npm run build
-        echo "Build completed, static files are in out/ directory"
+        echo "Build completed, static files are in docs/ directory"
         
         # 验证关键文件是否存在
         echo "Checking build output..."
-        ls -la out/
+        ls -la docs/
         
-        if [ -f "out/dashboard/index.html" ]; then
+        if [ -f "docs/dashboard/index.html" ]; then
           echo "✅ Dashboard page exists"
         else
           echo "❌ Dashboard page missing"
         fi
         
-        if [ -f "out/trend/index.html" ]; then
+        if [ -f "docs/trend/index.html" ]; then
           echo "✅ Trend page exists"
         else
           echo "❌ Trend page missing"
         fi
         
-        if [ -f "out/heat/index.html" ]; then
+        if [ -f "docs/heat/index.html" ]; then
           echo "✅ Heat page exists"
         else
           echo "❌ Heat page missing"
         fi
         
-        if [ -f "out/404.html" ]; then
+        if [ -f "docs/404.html" ]; then
           echo "✅ 404.html exists for client-side routing"
         else
           echo "❌ 404.html missing"
@@ -121,7 +121,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./out
+        publish_dir: ./docs
         force_orphan: true
         user_name: 'github-actions[bot]'
         user_email: 'github-actions[bot]@users.noreply.github.com'
