@@ -7,7 +7,6 @@ export const dynamicParams = false
 import { Search, Filter, Download, RefreshCw } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingCard, LoadingTable } from '@/components/ui/loading'
-import { RunRecords } from '@/components/ui/run-records'
 import { Artist, VotingStage, DailySnapshot } from '@/types'
 import { fetchVotingDataFromApi } from '@/lib/api'
 import { formatNumber, getRankChangeInfo, formatDate, cn } from '@/lib/utils'
@@ -336,10 +335,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* 运行记录 */}
-        <div className="mb-8">
-          <RunRecords />
-        </div>
+
 
         {/* 排行榜表格 */}
         <Card>
