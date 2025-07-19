@@ -296,9 +296,24 @@ export async function fetchCategoryTrendData(stage: VotingStage, days: number = 
 // 从本地压缩文件加载数据
 async function fetchLocalData(stage: VotingStage): Promise<DailySnapshot | null> {
   try {
-    // 尝试获取今天的数据
-    const today = new Date().toISOString().split('T')[0]
-    const filename = `${today}_${stage}.json.gz`
+    // 首先获取manifest文件，找到最新的可用数据
+    const manifestResponse = await fetch('/data/manifest.json')
+    if (!manifestResponse.ok) {
+      throw new Error('无法加载manifest文件')
+    }
+    
+    const manifest = await manifestResponse.json()
+    const availableDates = manifest[stage] || []
+    
+    if (availableDates.length === 0) {
+      throw new Error(`没有可用的 ${stage} 阶段数据`)
+    }
+    
+    // 使用最新的可用数据
+    const latestDate = availableDates[availableDates.length - 1]
+    const filename = `${latestDate}_${stage}.json.gz`
+    
+    console.log(`尝试加载数据文件: ${filename}`)
     
     const response = await fetch(`/data/${filename}`)
     if (!response.ok) {
@@ -314,6 +329,7 @@ async function fetchLocalData(stage: VotingStage): Promise<DailySnapshot | null>
     const decompressed = pako.inflate(compressed, { to: 'string' })
     const data = JSON.parse(decompressed)
     
+    console.log(`成功加载数据: ${filename}`)
     return data
   } catch (error) {
     console.warn('加载本地数据失败:', error)
