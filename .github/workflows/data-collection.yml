@@ -67,8 +67,25 @@ jobs:
       env:
         API_BASE_URL: ${{ secrets.FANFEVER_API_URL }}
       run: |
+        echo "API_BASE_URL: $API_BASE_URL"
+        echo "VOTING_STAGE: first"
+        
+        # 检查环境变量
+        if [ -z "$API_BASE_URL" ]; then
+          echo "❌ API_BASE_URL 环境变量未设置"
+          exit 1
+        fi
+        
+        # 运行数据收集
         VOTING_STAGE=first node scripts/fetchVotes.js
-        echo "First stage data collection completed"
+        
+        # 检查是否成功
+        if [ $? -eq 0 ]; then
+          echo "✅ First stage data collection completed"
+        else
+          echo "❌ First stage data collection failed"
+          exit 1
+        fi
     
     - name: Wait between stages
       if: steps.check-time.outputs.should_collect == 'true' && github.event.inputs.stage == 'both'

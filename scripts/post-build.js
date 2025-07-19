@@ -3,7 +3,7 @@ const path = require('path')
 
 // 构建后处理脚本，用于修复 GitHub Pages 路由问题
 function postBuild() {
-  const outDir = path.join(__dirname, '../out')
+  const outDir = path.join(__dirname, '../docs')
   
   console.log('开始构建后处理...')
   
