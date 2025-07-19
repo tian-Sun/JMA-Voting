@@ -40,16 +40,18 @@ interface ApiArtist {
 
 // 主要的API调用函数 - 优先使用本地数据，失败时尝试API
 export async function fetchVotingDataFromApi(stage: VotingStage): Promise<DailySnapshot | null> {
+  console.log(`开始获取 ${stage} 阶段数据...`)
+  
   // 首先尝试加载本地数据
   try {
     console.log('尝试加载本地数据...')
     const localData = await fetchLocalData(stage)
     if (localData) {
-      console.log('使用本地数据')
+      console.log('✅ 使用本地数据成功')
       return localData
     }
   } catch (error) {
-    console.log('本地数据加载失败，尝试API调用:', error)
+    console.log('❌ 本地数据加载失败，尝试API调用:', error)
   }
 
   // 如果本地数据不可用，尝试API调用
