@@ -76,7 +76,7 @@ export default function HeatPage() {
         axisPointer: { type: 'shadow' }
       },
       legend: {
-        data: ['总票数', 'Top10占比(%)', '日增长率(%)'],
+        data: ['总票数', 'Top10票数占比(%)', '日增长率(%)'],
         top: 40
       },
       grid: {
@@ -122,7 +122,7 @@ export default function HeatPage() {
           yAxisIndex: 0
         },
         {
-          name: 'Top10占比(%)',
+          name: 'Top10票数占比(%)',
           type: 'line',
           data: topTenRatio,
           itemStyle: { color: '#3b82f6' },
@@ -311,7 +311,7 @@ export default function HeatPage() {
           }
         case 'topTenRatio':
           return {
-            title: `${prefix}Top10占比${suffix}`,
+            title: `${prefix}Top10票数占比${suffix}`,
             yAxisName: '占比(%)',
             formatter: (value: number) => value.toFixed(1) + '%'
           }
@@ -479,7 +479,7 @@ export default function HeatPage() {
     { value: 'dailyGrowth', label: '日增长率' },
     { value: 'competitionIntensity', label: '竞争激烈度' },
     { value: 'averageVotes', label: '平均票数' },
-    { value: 'topTenRatio', label: 'Top10占比' }
+    { value: 'topTenRatio', label: 'Top10票数占比' }
   ]
 
   if (loading) {
@@ -812,7 +812,7 @@ export default function HeatPage() {
                   <tr className="border-b">
                     <th className="text-left py-3 px-4">分类</th>
                     <th className="text-right py-3 px-4">总票数</th>
-                    <th className="text-right py-3 px-4">Top10占比</th>
+                    <th className="text-right py-3 px-4">Top10票数占比</th>
                     <th className="text-right py-3 px-4">日增长率</th>
                     <th className="text-right py-3 px-4">竞争激烈度</th>
                     <th className="text-right py-3 px-4">平均票数</th>

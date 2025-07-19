@@ -257,74 +257,7 @@ export default function TrendPage() {
           </CardContent>
         </Card>
 
-        {/* 艺人列表 */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              {selectedCategory && (() => {
-                const categoryNames: { [key: string]: string } = {
-                  'AM50': '年度男艺人', 'AM51': '年度女艺人', 'AM52': '年度男团',
-                  'AM53': '年度女团', 'AM54': '最具人气新人-男', 'AM55': '最具人气新人-女',
-                  'PR70': '年度歌曲', 'PR71': '年度专辑', 'PR72': '年度合作',
-                  'PR73': '年度MV', 'PR74': 'JMA中国最具影响力华语流行男艺人'
-                }
-                return categoryNames[selectedCategory] || selectedCategory
-              })()}
-              {selectedCategory && (
-                <span className="text-xs text-gray-400 ml-2">
-                  (共 {artists.filter(artist => artist.category === selectedCategory).length} 位艺人)
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
-              {artists.filter(artist => selectedCategory && artist.category === selectedCategory).map(artist => (
-                <div key={artist.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    {artist.imageUrl && (
-                      <img 
-                        src={artist.imageUrl} 
-                        alt={artist.name}
-                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                        }}
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">
-                        {artist.name}
-                        {/* 作品类榜单显示作品名称 */}
-                        {artist.nameOfWork && ['PR70', 'PR71', 'PR72', 'PR73'].includes(artist.category) && (
-                          <span className="text-xs text-blue-600 ml-1">
-                            ({artist.nameOfWork})
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        #{artist.rankToday} · {formatNumber(artist.currentVotes)} 票
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {(() => {
-                          const categoryNames: { [key: string]: string } = {
-                            'AM50': '年度男艺人', 'AM51': '年度女艺人', 'AM52': '年度男团',
-                            'AM53': '年度女团', 'AM54': '最具人气新人-男', 'AM55': '最具人气新人-女',
-                            'PR70': '年度歌曲', 'PR71': '年度专辑', 'PR72': '年度合作',
-                            'PR73': '年度MV', 'PR74': 'JMA中国最具影响力华语流行男艺人'
-                          }
-                          return categoryNames[artist.category] || artist.category
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+
 
         {/* 趋势表格 */}
         <Card>
