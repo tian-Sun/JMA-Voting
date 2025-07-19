@@ -298,6 +298,8 @@ export async function fetchCategoryTrendData(stage: VotingStage, days: number = 
 // 从本地压缩文件加载数据
 async function fetchLocalData(stage: VotingStage): Promise<DailySnapshot | null> {
   try {
+    console.log('🔍 开始加载本地数据...')
+    
     // 首先获取manifest文件，找到最新的可用数据
     const manifestResponse = await fetch('/data/manifest.json')
     if (!manifestResponse.ok) {
@@ -305,7 +307,10 @@ async function fetchLocalData(stage: VotingStage): Promise<DailySnapshot | null>
     }
     
     const manifest = await manifestResponse.json()
+    console.log('📋 Manifest内容:', manifest)
+    
     const availableDates = manifest[stage] || []
+    console.log(`📅 ${stage} 阶段可用日期:`, availableDates)
     
     if (availableDates.length === 0) {
       throw new Error(`没有可用的 ${stage} 阶段数据`)
@@ -315,26 +320,41 @@ async function fetchLocalData(stage: VotingStage): Promise<DailySnapshot | null>
     const latestDate = availableDates[availableDates.length - 1]
     const filename = `${latestDate}_${stage}.json.gz`
     
-    console.log(`尝试加载数据文件: ${filename}`)
+    console.log(`📁 尝试加载数据文件: ${filename}`)
     
     const response = await fetch(`/data/${filename}`)
     if (!response.ok) {
       throw new Error(`本地文件不存在: ${filename}`)
     }
 
+    console.log(`✅ 文件加载成功，大小: ${response.headers.get('content-length')} bytes`)
+
     // 解压数据
     const arrayBuffer = await response.arrayBuffer()
     const compressed = new Uint8Array(arrayBuffer)
     
+    console.log(`📦 压缩数据大小: ${compressed.length} bytes`)
+    
     // 动态导入pako用于解压
     const pako = await import('pako')
     const decompressed = pako.inflate(compressed, { to: 'string' })
+    
+    console.log(`📄 解压后数据大小: ${decompressed.length} characters`)
+    
     const data = JSON.parse(decompressed)
     
-    console.log(`成功加载数据: ${filename}`)
+    console.log(`✅ 成功加载数据: ${filename}`)
+    console.log(`📊 数据概览:`, {
+      snapshot_date: data.snapshot_date,
+      stage: data.stage,
+      total_votes: data.total_votes,
+      categories: Object.keys(data.categories || {}),
+      categoryCount: Object.keys(data.categories || {}).length
+    })
+    
     return data
   } catch (error) {
-    console.warn('加载本地数据失败:', error)
+    console.error('❌ 加载本地数据失败:', error)
     return null
   }
 }
