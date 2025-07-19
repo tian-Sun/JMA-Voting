@@ -3,14 +3,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Calendar, TrendingUp, Download, Settings, Filter } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { LoadingCard, LoadingChart } from '@/components/ui/loading'
-import { VotingStage, ArtistTrend, Artist } from '@/types'
-import { formatDate, formatNumber, generateColors, cn } from '@/lib/utils'
+import { LoadingCard } from '@/components/ui/loading'
+import { VotingStage, Artist } from '@/types'
+import { formatDate, formatNumber, cn } from '@/lib/utils'
 import { fetchMultiStageData } from '@/lib/api'
-import dynamic from 'next/dynamic'
-
-// 动态导入 ECharts 组件
-const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
 // 确保页面可以静态生成
 export const dynamicParams = false
@@ -19,7 +15,6 @@ export default function TrendPage() {
   const [loading, setLoading] = useState(true)
   const [stage, setStage] = useState<VotingStage>('first')
   const [dateRange, setDateRange] = useState<'7' | '14' | '30'>('7')
-  const [chartType, setChartType] = useState<'votes' | 'rank'>('votes')
   const [artists, setArtists] = useState<Artist[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [availableCategories, setAvailableCategories] = useState<string[]>([])
@@ -81,115 +76,7 @@ export default function TrendPage() {
     return artists.filter(artist => artist.category === selectedCategory)
   }, [artists, selectedCategory])
 
-  // 生成图表配置
-  const generateChartOption = () => {
-    
-    const colors = generateColors(filteredArtists.length)
-    
-    if (chartType === 'votes') {
-      return {
-        title: {
-          text: '投票趋势分析（当前数据快照）',
-          left: 'center'
-        },
-        tooltip: {
-          trigger: 'axis',
-          formatter: (params: any) => {
-            let content = `<div>当前快照</div>`
-            params.forEach((param: any, index: number) => {
-              content += `<div style="color:${param.color}">
-                ${param.seriesName}: ${param.value.toLocaleString()} 票
-              </div>`
-            })
-            return content
-          }
-        },
-        legend: {
-          data: filteredArtists.map(artist => {
-            // 作品类榜单在图例中显示作品名称
-            if (artist.nameOfWork && ['PR70', 'PR71', 'PR72', 'PR73'].includes(artist.category)) {
-              return `${artist.name} (${artist.nameOfWork})`
-            }
-            return artist.name
-          }),
-          bottom: 10
-        },
-        xAxis: {
-          type: 'category',
-          data: ['当前排名']
-        },
-        yAxis: {
-          type: 'value',
-          name: '票数',
-          axisLabel: {
-            formatter: (value: number) => value.toLocaleString()
-          }
-        },
-        series: filteredArtists.map((artist, index) => ({
-          name: artist.nameOfWork && ['PR70', 'PR71', 'PR72', 'PR73'].includes(artist.category) 
-            ? `${artist.name} (${artist.nameOfWork})` 
-            : artist.name,
-          type: 'bar',
-          data: [artist.currentVotes],
-          itemStyle: {
-            color: colors[index]
-          }
-        }))
-      }
-    } else {
-      return {
-        title: {
-          text: '排名对比分析（当前数据快照）',
-          left: 'center'
-        },
-        tooltip: {
-          trigger: 'axis',
-          formatter: (params: any) => {
-            let content = `<div>当前排名</div>`
-            params.forEach((param: any, index: number) => {
-              content += `<div style="color:${param.color}">
-                ${param.seriesName}: 第 ${param.value} 名
-              </div>`
-            })
-            return content
-          }
-        },
-        legend: {
-          data: filteredArtists.map(artist => {
-            // 作品类榜单在图例中显示作品名称
-            if (artist.nameOfWork && ['PR70', 'PR71', 'PR72', 'PR73'].includes(artist.category)) {
-              return `${artist.name} (${artist.nameOfWork})`
-            }
-            return artist.name
-          }),
-          bottom: 10
-        },
-        xAxis: {
-          type: 'category',
-          data: ['当前排名']
-        },
-        yAxis: {
-          type: 'value',
-          name: '排名',
-          inverse: true,
-          min: 1,
-          axisLabel: {
-            formatter: (value: number) => `第${value}名`
-          }
-        },
-        series: filteredArtists.map((artist, index) => ({
-          name: artist.nameOfWork && ['PR70', 'PR71', 'PR72', 'PR73'].includes(artist.category) 
-            ? `${artist.name} (${artist.nameOfWork})` 
-            : artist.name,
-          type: 'bar',
-          data: [artist.rankToday],
-          itemStyle: {
-            color: colors[index]
-          }
-        }))
-      }
-    }
-  }
+
 
   // 导出数据
   const handleExport = () => {
@@ -227,9 +114,6 @@ export default function TrendPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <LoadingCard title="正在加载趋势数据..." description="请稍候" />
-          <div className="mt-8">
-            <LoadingChart />
-          </div>
         </div>
       </div>
     )
@@ -328,15 +212,7 @@ export default function TrendPage() {
                   <option value="30">近30天</option>
                 </select>
 
-                {/* 图表类型 */}
-                <select
-                  value={chartType}
-                  onChange={(e) => setChartType(e.target.value as 'votes' | 'rank')}
-                  className="select-trigger w-32"
-                >
-                  <option value="votes">票数趋势</option>
-                  <option value="rank">排名趋势</option>
-                </select>
+
 
                 {/* 分类筛选 */}
                 <select
@@ -450,11 +326,11 @@ export default function TrendPage() {
           </CardContent>
         </Card>
 
-        {/* 趋势图表 */}
+        {/* 趋势表格 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {chartType === 'votes' ? '投票数据对比' : '排名数据对比'}
+              排名趋势表格
               {selectedCategory && (
                 <span className="text-sm font-normal text-gray-500">
                   - {(() => {
@@ -475,13 +351,76 @@ export default function TrendPage() {
           </CardHeader>
           <CardContent>
             {filteredArtists.length > 0 ? (
-              <div className="chart-container">
-                <ReactECharts
-                  option={generateChartOption()}
-                  style={{ height: '400px', width: '100%' }}
-                  notMerge={true}
-                  lazyUpdate={true}
-                />
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-200">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border border-gray-200 px-4 py-2 text-left font-medium text-gray-700">
+                        名称
+                      </th>
+                      <th className="border border-gray-200 px-4 py-2 text-center font-medium text-gray-700">
+                        当前排名
+                      </th>
+                      <th className="border border-gray-200 px-4 py-2 text-center font-medium text-gray-700">
+                        当前票数
+                      </th>
+                      <th className="border border-gray-200 px-4 py-2 text-center font-medium text-gray-700">
+                        排名变化
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredArtists.map((artist, index) => (
+                      <tr key={artist.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="border border-gray-200 px-4 py-3">
+                          <div className="flex items-center space-x-3">
+                            {artist.imageUrl && (
+                              <img 
+                                src={artist.imageUrl} 
+                                alt={artist.name}
+                                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                }}
+                              />
+                            )}
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {artist.name}
+                                {artist.nameOfWork && ['PR70', 'PR71', 'PR72', 'PR73'].includes(artist.category) && (
+                                  <span className="text-xs text-blue-600 ml-1">
+                                    ({artist.nameOfWork})
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {artist.talentNumber}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            #{artist.rankToday}
+                          </span>
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-center font-medium text-gray-900">
+                          {formatNumber(artist.currentVotes)}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-center">
+                          {artist.rankDelta > 0 ? (
+                            <span className="text-green-600">↑ +{artist.rankDelta}</span>
+                          ) : artist.rankDelta < 0 ? (
+                            <span className="text-red-600">↓ {artist.rankDelta}</span>
+                          ) : (
+                            <span className="text-gray-500">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : (
               <div className="py-12 text-center text-gray-500">
