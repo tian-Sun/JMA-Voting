@@ -38,7 +38,7 @@ interface ApiArtist {
   }
 }
 
-// 主要的API调用函数 - 优先使用本地数据，失败时尝试API
+// 主要的API调用函数 - 优先使用本地数据，失败时使用备用数据
 export async function fetchVotingDataFromApi(stage: VotingStage): Promise<DailySnapshot | null> {
   console.log(`开始获取 ${stage} 阶段数据...`)
   
@@ -51,22 +51,12 @@ export async function fetchVotingDataFromApi(stage: VotingStage): Promise<DailyS
       return localData
     }
   } catch (error) {
-    console.log('❌ 本地数据加载失败，尝试API调用:', error)
+    console.log('❌ 本地数据加载失败:', error)
   }
 
-  // 如果本地数据不可用，尝试API调用
-  try {
-    console.log('尝试API调用...')
-    const apiData = await fetchAllVotingDataFromAPI(stage)
-    if (apiData) {
-      return apiData
-    }
-  } catch (error) {
-    console.log('API调用失败:', error)
-  }
-  
-  // 如果API调用也失败，使用备用数据
-  console.log('使用备用数据')
+  // 如果本地数据不可用，使用备用数据
+  console.log('📝 本地数据不可用，使用备用数据')
+  console.log('💡 提示: 请运行 npm run collect:first 收集最新数据')
   return generateFallbackData(stage)
 }
 
@@ -359,27 +349,11 @@ async function fetchLocalData(stage: VotingStage): Promise<DailySnapshot | null>
   }
 }
 
-// 从API获取所有榜单数据（可能因CORS失败）
+// 从API获取所有榜单数据（客户端环境下跳过，避免CORS问题）
 async function fetchAllVotingDataFromAPI(stage: VotingStage): Promise<DailySnapshot | null> {
-  console.log(`开始从API获取所有榜单的 ${stage} 阶段数据...`)
-  
-  // 并行获取所有榜单数据
-  const listPromises = VOTING_LISTS.map(list => fetchSingleListData(list.id, stage))
-  const results = await Promise.allSettled(listPromises)
-  
-  const successfulResults = results
-    .filter(result => result.status === 'fulfilled' && result.value !== null)
-    .map(result => (result as PromiseFulfilledResult<any>).value)
-  
-  if (successfulResults.length === 0) {
-    console.warn('所有榜单数据获取失败，将使用备用数据')
-    return null
-  }
-
-  console.log(`成功获取 ${successfulResults.length}/${VOTING_LISTS.length} 个榜单数据`)
-  
-  // 合并所有榜单数据
-  return mergeAllListsData(successfulResults, stage)
+  console.log(`⚠️ 客户端环境下跳过API调用，避免CORS问题`)
+  console.log(`📝 请使用手动数据收集命令: npm run collect:${stage}`)
+  return null
 }
 
 // 获取单个榜单数据
