@@ -122,22 +122,63 @@ function mergeAllListsData(results, stage) {
   let totalVotes = 0
   const categories = {}
 
+  // 加载前一天的历史数据用于计算排名变化
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayString = yesterday.toISOString().split('T')[0]
+  const yesterdayFile = path.join(config.historyDir, `${yesterdayString}_${stage}.json.gz`)
+  
+  let previousSnapshot = null
+  if (fs.existsSync(yesterdayFile)) {
+    try {
+      const compressed = fs.readFileSync(yesterdayFile)
+      const decompressed = pako.inflate(compressed, { to: 'string' })
+      const yesterdayData = JSON.parse(decompressed)
+      previousSnapshot = yesterdayData.snapshot
+      console.log(`✅ 加载前一天数据用于计算排名变化: ${yesterdayString}`)
+    } catch (error) {
+      console.warn(`❌ 加载前一天数据失败: ${yesterdayFile}`, error.message)
+    }
+  } else {
+    console.log(`📝 没有前一天数据，排名变化将显示为"-"`)
+  }
+
   results.forEach(({ listConfig, data }) => {
     totalVotes += data.total_votes || 0
     
+    // 获取前一天该分类的艺人数据
+    const previousArtists = previousSnapshot?.categories?.[listConfig.category] || []
+    const previousArtistMap = new Map(previousArtists.map(artist => [artist.id, artist]))
+    
     // 转换艺人数据
-    const artists = data.data.map((apiArtist, index) => ({
-      id: `${listConfig.category}-${apiArtist.talent_number || index}`,
-      name: apiArtist.talent.artiste_nominated,
-      englishName: apiArtist.talent.english_name,
-      currentVotes: apiArtist.votes,
-      rankToday: apiArtist.rank,
-      rankDelta: 0, // 暂时设为0，后续可以计算
-      category: listConfig.category,
-      talentNumber: apiArtist.talent_number,
-      imageUrl: apiArtist.talent.image_url,
-      nameOfWork: apiArtist.talent.name_of_work,
-    }))
+    const artists = data.data.map((apiArtist, index) => {
+      const artistId = `${listConfig.category}-${apiArtist.talent_number || index}`
+      const previousArtist = previousArtistMap.get(artistId)
+      
+      // 计算排名变化
+      let rankYesterday = null
+      let rankDelta = 0
+      
+      if (previousArtist) {
+        rankYesterday = previousArtist.rankToday
+        rankDelta = previousArtist.rankToday - apiArtist.rank
+      }
+      
+      return {
+        id: artistId,
+        name: apiArtist.talent.artiste_nominated,
+        englishName: apiArtist.talent.english_name,
+        currentVotes: apiArtist.votes,
+        rankToday: apiArtist.rank,
+        rankYesterday: rankYesterday,
+        rankDelta: rankDelta,
+        category: listConfig.category,
+        talentNumber: apiArtist.talent_number,
+        imageUrl: apiArtist.talent.image_url,
+        nameOfWork: apiArtist.talent.name_of_work,
+        platformVotes: apiArtist.data_source || [], // 添加平台票数数据
+      }
+    })
 
     categories[listConfig.category] = artists
   })
@@ -176,17 +217,23 @@ function generateBackupData(stage) {
       const votes = Math.floor(Math.random() * 100000) + 10000
       totalVotes += votes
       
+      // 生成随机的昨日排名和排名变化
+      const rankDelta = Math.floor(Math.random() * 11) - 5
+      const rankYesterday = Math.max(1, i + rankDelta)
+      
       artists.push({
         id: `${listConfig.category}-${i}`,
         name: `${listConfig.code} 候选人 ${i}`,
         englishName: `${listConfig.code} Candidate ${i}`,
         currentVotes: votes,
         rankToday: i,
-        rankDelta: Math.floor(Math.random() * 11) - 5,
+        rankYesterday: rankYesterday,
+        rankDelta: rankDelta,
         category: listConfig.category,
         talentNumber: `${listConfig.code.slice(0,2)} ${i.toString().padStart(2, '0')}`,
         imageUrl: `https://picsum.photos/200/200?random=${i + listConfig.id * 100}`,
         nameOfWork: listConfig.code.startsWith('PR') ? `作品 ${i}` : null,
+        platformVotes: [], // 备用数据没有平台票数
       })
     }
     

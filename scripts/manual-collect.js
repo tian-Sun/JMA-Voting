@@ -91,6 +91,27 @@ async function collectVotingData(stage = 'first') {
     
     console.log(`成功获取 ${successfulResults.length}/${VOTING_LISTS.length} 个榜单数据`)
     
+    // 加载前一天的历史数据用于计算排名变化
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayString = yesterday.toISOString().split('T')[0]
+    const yesterdayFile = path.join(historyDir, `${yesterdayString}_${stage}.json.gz`)
+    
+    let previousSnapshot = null
+    if (fs.existsSync(yesterdayFile)) {
+      try {
+        const compressed = fs.readFileSync(yesterdayFile)
+        const decompressed = pako.inflate(compressed, { to: 'string' })
+        const yesterdayData = JSON.parse(decompressed)
+        previousSnapshot = yesterdayData
+        console.log(`✅ 加载前一天数据用于计算排名变化: ${yesterdayString}`)
+      } catch (error) {
+        console.warn(`❌ 加载前一天数据失败: ${yesterdayFile}`, error.message)
+      }
+    } else {
+      console.log(`📝 没有前一天数据，排名变化将显示为"-"`)
+    }
+    
     // 合并数据
     let totalVotes = 0
     const categories = {}
@@ -98,20 +119,39 @@ async function collectVotingData(stage = 'first') {
     successfulResults.forEach(({ listConfig, data }) => {
       totalVotes += data.total_votes || 0
       
+      // 获取前一天该分类的艺人数据
+      const previousArtists = previousSnapshot?.categories?.[listConfig.category] || []
+      const previousArtistMap = new Map(previousArtists.map(artist => [artist.id, artist]))
+      
       // 转换艺人数据
-      const artists = data.data.map((apiArtist, index) => ({
-        id: `${listConfig.category}-${apiArtist.talent_number || index}`,
-        name: apiArtist.talent.artiste_nominated,
-        englishName: apiArtist.talent.english_name,
-        currentVotes: apiArtist.votes,
-        rankToday: apiArtist.rank,
-        rankDelta: 0,
-        category: listConfig.category,
-        talentNumber: apiArtist.talent_number,
-        imageUrl: apiArtist.talent.image_url,
-        nameOfWork: apiArtist.talent.name_of_work,
-        platformVotes: apiArtist.data_source || [], // 添加平台票数数据
-      }))
+      const artists = data.data.map((apiArtist, index) => {
+        const artistId = `${listConfig.category}-${apiArtist.talent_number || index}`
+        const previousArtist = previousArtistMap.get(artistId)
+        
+        // 计算排名变化
+        let rankYesterday = null
+        let rankDelta = 0
+        
+        if (previousArtist) {
+          rankYesterday = previousArtist.rankToday
+          rankDelta = previousArtist.rankToday - apiArtist.rank
+        }
+        
+        return {
+          id: artistId,
+          name: apiArtist.talent.artiste_nominated,
+          englishName: apiArtist.talent.english_name,
+          currentVotes: apiArtist.votes,
+          rankToday: apiArtist.rank,
+          rankYesterday: rankYesterday,
+          rankDelta: rankDelta,
+          category: listConfig.category,
+          talentNumber: apiArtist.talent_number,
+          imageUrl: apiArtist.talent.image_url,
+          nameOfWork: apiArtist.talent.name_of_work,
+          platformVotes: apiArtist.data_source || [], // 添加平台票数数据
+        }
+      })
       
       categories[listConfig.category] = artists
     })
