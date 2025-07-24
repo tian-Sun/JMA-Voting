@@ -57,13 +57,17 @@ async function fetchSingleListData(listId, stage) {
   }
 }
 
-async function collectVotingData(stage = 'first') {
+async function collectVotingData(stage = 'first', customDate = null) {
   console.log(`开始收集 ${stage} 阶段投票数据...`)
   console.log(`API地址: ${API_BASE_URL}`)
   
   const now = new Date()
-  const today = now.toISOString().split('T')[0]
+  const today = customDate || now.toISOString().split('T')[0]
   const timestamp = now.getTime()
+  
+  if (customDate) {
+    console.log(`使用自定义日期: ${customDate}`)
+  }
   
   // 确保数据目录存在
   const dataDir = path.join(__dirname, '../public/data')
@@ -92,7 +96,7 @@ async function collectVotingData(stage = 'first') {
     console.log(`成功获取 ${successfulResults.length}/${VOTING_LISTS.length} 个榜单数据`)
     
     // 加载前一天的历史数据用于计算排名变化
-    const yesterday = new Date()
+    const yesterday = customDate ? new Date(customDate) : new Date()
     yesterday.setDate(yesterday.getDate() - 1)
     const yesterdayString = yesterday.toISOString().split('T')[0]
     const yesterdayFile = path.join(historyDir, `${yesterdayString}_${stage}.json.gz`)
@@ -139,17 +143,17 @@ async function collectVotingData(stage = 'first') {
         
         return {
           id: artistId,
-          name: apiArtist.talent.artiste_nominated,
-          englishName: apiArtist.talent.english_name,
-          currentVotes: apiArtist.votes,
-          rankToday: apiArtist.rank,
+        name: apiArtist.talent.artiste_nominated,
+        englishName: apiArtist.talent.english_name,
+        currentVotes: apiArtist.votes,
+        rankToday: apiArtist.rank,
           rankYesterday: rankYesterday,
           rankDelta: rankDelta,
-          category: listConfig.category,
-          talentNumber: apiArtist.talent_number,
-          imageUrl: apiArtist.talent.image_url,
-          nameOfWork: apiArtist.talent.name_of_work,
-          platformVotes: apiArtist.data_source || [], // 添加平台票数数据
+        category: listConfig.category,
+        talentNumber: apiArtist.talent_number,
+        imageUrl: apiArtist.talent.image_url,
+        nameOfWork: apiArtist.talent.name_of_work,
+        platformVotes: apiArtist.data_source || [], // 添加平台票数数据
         }
       })
       
@@ -305,14 +309,21 @@ function updateRunRecords(stage, success, error = null) {
 // 主函数
 async function main() {
   const stage = process.argv[2] || 'first'
+  const customDate = process.argv[3] // 新增日期参数，格式: YYYY-MM-DD
   
   if (!['first', 'second'].includes(stage)) {
     console.error('❌ 无效的阶段参数，请使用 "first" 或 "second"')
     process.exit(1)
   }
   
+  // 验证日期格式
+  if (customDate && !/^\d{4}-\d{2}-\d{2}$/.test(customDate)) {
+    console.error('❌ 无效的日期格式，请使用 YYYY-MM-DD 格式（例如：2025-07-23）')
+    process.exit(1)
+  }
+  
   try {
-    await collectVotingData(stage)
+    await collectVotingData(stage, customDate)
     console.log('✅ 手动数据收集完成！')
   } catch (error) {
     console.error('❌ 手动数据收集失败:', error)

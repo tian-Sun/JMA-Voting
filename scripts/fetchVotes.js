@@ -166,16 +166,16 @@ function mergeAllListsData(results, stage) {
       
       return {
         id: artistId,
-        name: apiArtist.talent.artiste_nominated,
-        englishName: apiArtist.talent.english_name,
-        currentVotes: apiArtist.votes,
-        rankToday: apiArtist.rank,
+      name: apiArtist.talent.artiste_nominated,
+      englishName: apiArtist.talent.english_name,
+      currentVotes: apiArtist.votes,
+      rankToday: apiArtist.rank,
         rankYesterday: rankYesterday,
         rankDelta: rankDelta,
-        category: listConfig.category,
-        talentNumber: apiArtist.talent_number,
-        imageUrl: apiArtist.talent.image_url,
-        nameOfWork: apiArtist.talent.name_of_work,
+      category: listConfig.category,
+      talentNumber: apiArtist.talent_number,
+      imageUrl: apiArtist.talent.image_url,
+      nameOfWork: apiArtist.talent.name_of_work,
         platformVotes: apiArtist.data_source || [], // 添加平台票数数据
       }
     })

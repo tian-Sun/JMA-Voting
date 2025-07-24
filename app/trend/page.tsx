@@ -403,7 +403,7 @@ export default function TrendPage() {
                                 artistName={artist.name}
                                 className="w-16 h-8"
                               />
-                            )}
+                          )}
                           </div>
                         </td>
                       </tr>
