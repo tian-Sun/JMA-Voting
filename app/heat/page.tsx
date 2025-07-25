@@ -163,7 +163,8 @@ export default function HeatPage() {
       tooltip: {
         trigger: 'item',
         formatter: (params: any) => {
-          return `${params.name}: ${params.value.toFixed(1)}`
+          const value = typeof params.value === 'number' ? params.value : 0
+          return `${params.name}: ${value.toFixed(1)}`
         }
       },
       radar: {
@@ -836,7 +837,7 @@ export default function HeatPage() {
                           cat.topTenRatio > 60 ? 'bg-yellow-100 text-yellow-800' :
                           'bg-green-100 text-green-800'
                         )}>
-                          {cat.topTenRatio.toFixed(1)}%
+                          {(cat.topTenRatio || 0).toFixed(1)}%
                         </span>
                       </td>
                       <td className="text-right py-3 px-4">
@@ -846,7 +847,7 @@ export default function HeatPage() {
                           cat.dailyGrowth < 0 ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         )}>
-                          {cat.dailyGrowth > 0 ? '+' : ''}{cat.dailyGrowth.toFixed(1)}%
+                          {(cat.dailyGrowth || 0) > 0 ? '+' : ''}{(cat.dailyGrowth || 0).toFixed(1)}%
                         </span>
                       </td>
                       <td className="text-right py-3 px-4">
@@ -920,7 +921,7 @@ export default function HeatPage() {
                     <div>
                       <span className="text-gray-500">票数增长:</span>
                       <span className="ml-1 text-green-600 font-medium">
-                        +{horse.voteGrowth.toFixed(1)}%
+                        +{(horse.voteGrowth || 0).toFixed(1)}%
                       </span>
                     </div>
                     <div>

@@ -2,13 +2,6 @@
   "first": [
     {
       "date": "2025-07-19",
-      "time": "2025-07-19T06:00:59.885Z",
-      "timestamp": 1752904859885,
-      "success": true,
-      "error": null
-    },
-    {
-      "date": "2025-07-19",
       "time": "2025-07-19T09:53:09.004Z",
       "timestamp": 1752918789004,
       "success": true,
@@ -67,6 +60,13 @@
       "date": "2025-07-25",
       "time": "2025-07-25T01:35:36.392Z",
       "timestamp": 1753407336392,
+      "success": true,
+      "error": null
+    },
+    {
+      "date": "2025-07-25",
+      "time": "2025-07-25T05:50:03.818Z",
+      "timestamp": 1753422603818,
       "success": true,
       "error": null
     }

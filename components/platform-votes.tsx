@@ -37,7 +37,7 @@ export function PlatformVotesDisplay({ platformVotes, totalVotes, className = ''
   return (
     <div className={`flex flex-wrap gap-1 ${className}`}>
       {sortedPlatforms.map((platform, index) => {
-        const percentage = totalVotes > 0 ? ((platform.votes / totalVotes) * 100).toFixed(1) : '0'
+        const percentage = totalVotes > 0 ? (((platform.votes || 0) / totalVotes) * 100).toFixed(1) : '0'
         const platformName = PLATFORM_NAMES[platform.platform] || platform.platform
         const platformColor = PLATFORM_COLORS[platform.platform] || 'bg-gray-100 text-gray-800 border-gray-200'
         
@@ -86,7 +86,12 @@ export function PlatformVotesSummary({ platformVotes, totalVotes, className = ''
   
   // 只显示票数最多的平台
   const topPlatform = sortedPlatforms[0]
-  const percentage = totalVotes > 0 ? ((topPlatform.votes / totalVotes) * 100).toFixed(1) : '0'
+  
+  if (!topPlatform) {
+    return null
+  }
+  
+  const percentage = totalVotes > 0 ? (((topPlatform.votes || 0) / totalVotes) * 100).toFixed(1) : '0'
   const platformName = PLATFORM_NAMES[topPlatform.platform] || topPlatform.platform
   const platformColor = PLATFORM_COLORS[topPlatform.platform] || 'bg-gray-100 text-gray-800 border-gray-200'
 
@@ -113,7 +118,7 @@ export function PlatformVotesSummary({ platformVotes, totalVotes, className = ''
               <div className="font-medium mb-2 text-sm">票数来源分布</div>
               <div className="space-y-1">
                 {sortedPlatforms.map((platform, index) => {
-                  const platformPercentage = totalVotes > 0 ? ((platform.votes / totalVotes) * 100).toFixed(1) : '0'
+                  const platformPercentage = totalVotes > 0 ? (((platform.votes || 0) / totalVotes) * 100).toFixed(1) : '0'
                   const platformDisplayName = PLATFORM_NAMES[platform.platform] || platform.platform
                   return (
                     <div key={platform.platform} className="flex justify-between items-center text-xs">
